@@ -72,8 +72,6 @@ void DecodeAudioStream(){
 //*****************************************************************************************************************//
 //***********************************INPUT SECTION FLOAT BUFFERED***********************************************************//
 //*****************************************************************************************************************//
-
-
  	 	f_inputLeft_DB = createFloats(12);
 		f_inputRight_DB = createFloats(16);
 		f_VCALeft_DB = createFloats(20);
@@ -90,7 +88,7 @@ void DecodeAudioStream(){
 
 
 /////////INPUT LEFT
-	  float diff1=0;
+	  static float diff1=0;
 	  diff1 = (f_inputLeft_DB_bufferd-f_inputLeft_DB);
 	  if(diff1<0){diff1=(-1)*diff1;}
 	  if (f_inputLeft_DB > f_inputLeft_DB_bufferd){f_inputLeft_DB_bufferd = f_inputLeft_DB;}

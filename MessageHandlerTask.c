@@ -35,8 +35,10 @@ void MessageHandlerTask(void *argument)
 	#else
     UARTsendIntervall = 2;
 	#endif
+    MessagesendIntervall = 50;
   for(;;)
   {
+
 
 	watchdog++;
 	#ifdef DISPLAY
@@ -56,7 +58,10 @@ void MessageHandlerTask(void *argument)
 
 	//##############SENDING UART################################//
 	count++;
+	count2++;
+
 	if(count>UARTsendIntervall){
+		popFromMessageQueue();
 		UARTSEND();
 		count = 0;
 		#ifdef DISPLAY
@@ -64,7 +69,18 @@ void MessageHandlerTask(void *argument)
 		resetMax = 1;
 		#endif
 	}
+
 	//#########################################################//
+	if(count2>MessagesendIntervall){
+		count2=0;
+		#ifdef DISPLAY
+		pushToMessageQueue("Hello From Display");
+		#else
+		pushToMessageQueue("Hello From MainEngine");
+		#endif
+	}
+
+
 
 	#ifdef DISPLAY
 	maxval1=0;maxval2=0;maxval3=0;maxval4=0;maxval5=0;maxval6=0;
@@ -78,6 +94,8 @@ void MessageHandlerTask(void *argument)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart6){
 	UARTRECIVE(); //Recive Data from UART --> UARTDATA
+	getMessageToReciveStack();
+
 	#ifdef DISPLAY
 	//Collect the MAX value in every crawling period.//
 	if(UARTDATA_CHECKED[6] > maxval1){maxval1 = UARTDATA_CHECKED[6];}
