@@ -21,8 +21,8 @@ extern UART_HandleTypeDef huart6; //UART Handle for Transport
 
 void MessageHandlerTask(void *argument)
 {
-	HAL_UART_Receive_DMA(&huart6, &UART_DMA_IN, RX_IN_SIZE);
-	HAL_UART_Transmit_DMA(&huart6, &UART_DMA_OUT, TX_OUT_SIZE);
+	HAL_UART_Receive_DMA(&huart6, UART_DMA_IN, RX_IN_SIZE);
+	HAL_UART_Transmit_DMA(&huart6, UART_DMA_OUT, TX_OUT_SIZE);
 	uint8_t watchdog = 0;
     p_Bufferd = 0.1;
     p_MAXBufferd = 0.001;
@@ -74,9 +74,9 @@ void MessageHandlerTask(void *argument)
 	if(count2>MessagesendIntervall){
 		count2=0;
 		#ifdef DISPLAY
-		pushToMessageQueue("Hello From Display");
+		pushToMessageQueue("Hello From Display", 1.23);
 		#else
-		pushToMessageQueue("Hello From MainEngine");
+		pushToMessageQueue("Hello From MainEngine", 1.24);
 		#endif
 	}
 

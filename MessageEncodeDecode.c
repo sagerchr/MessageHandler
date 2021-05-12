@@ -30,7 +30,7 @@ void InitMeassageHandler(){
 //###################################################//
 //######## Push a new Message to the Stack ##########//
 //###################################################//
-void pushToMessageQueue(char *String)
+void pushToMessageQueue(char *String, float payload)
 {
 	if (SendMessageStackPointer == MAXSTACK-1){
 		SendMessageStackPointer = -1;			//Reset WriteStackPointer if end of Queue is reached
@@ -40,6 +40,7 @@ void pushToMessageQueue(char *String)
         strcpy(SendMessageStack[SendMessageStackPointer].MESSAGE, String); //Fill Message to the Stack
         SendMessageStack[SendMessageStackPointer].Message_ID = ID_COUNT++; //Set Message_ID
         SendMessageStack[SendMessageStackPointer].status = 5; //Set Status to 5 "not yet sent to slave"
+        SendMessageStack[SendMessageStackPointer].payload = payload; //Set Status to 5 "not yet sent to slave"
 }
 
 
@@ -49,7 +50,9 @@ void pushToMessageQueue(char *String)
 void popFromMessageQueue()
 {
 	char *String;
-
+	char data[sizeof(float)];
+	float f = -1.236;
+	char a = data[0];char b = data[1];char c = data[2];char d = data[3];
 	//################Check if the last Message was read successfully bz the slave####################//
 	ReceivedMessageID = (UARTDATA_CHECKED[185]<<8) | (UARTDATA_CHECKED[184] & 0xFF);
 	if(ReceivedMessageID == MessageID && SendProcess == 1){
@@ -85,6 +88,13 @@ void popFromMessageQueue()
 	  		UART_DMA_OUT[182] = SendMessageStack[PopStackPointer].Message_ID >> 8; //high byte
 
 	  		UART_DMA_OUT[183] = SendMessageStack[PopStackPointer].status; //Put the Status on the UART_transmit
+
+	  		memcpy(data, &SendMessageStack[PopStackPointer].payload, sizeof &SendMessageStack[PopStackPointer].payload);    // send data
+	  		a = data[0]; b = data[1];c = data[2];d = data[3];
+	  		UART_DMA_OUT[171]=d;
+	  		UART_DMA_OUT[172]=c;
+	  		UART_DMA_OUT[173]=b;
+	  		UART_DMA_OUT[174]=a;
 
 	  		SendProcess = 1;
 		}
@@ -131,7 +141,7 @@ void getMessageToReciveStack()
 					ReceiveMessageStackPointer = 0;			//Reset WriteStackPointer if end of Queue is reached
 				}
 
-				for(int i = 100; i < 180; i++)
+				for(int i = 100; i < 170; i++)
 				{
 					ReceiveMessageStack[ReceiveMessageStackPointer].MESSAGE[i-100] = UARTDATA_CHECKED[i];
 				}
@@ -140,7 +150,9 @@ void getMessageToReciveStack()
 
 				ReceiveMessageStack[ReceiveMessageStackPointer].Message_ID = MessageID_RECEIVE;
 				ReceiveMessageStack[ReceiveMessageStackPointer].status = 99; // MARK as unconsumed
-				ReceiveMessageStack[ReceiveMessageStackPointer].payload = (UARTDATA_CHECKED[187]<<8) | (UARTDATA_CHECKED[186] & 0xFF);
+				ReceiveMessageStack[ReceiveMessageStackPointer].payload = RecreateFloats(171);
+
+
 				ReceiveMessageStackPointer++;
 
 
@@ -157,17 +169,36 @@ void getMessageToReciveStack()
 
 void WriteMessage (char *string){
 
-		for(int i = 100; i < 180; i++){
+		for(int i = 100; i < 170; i++){
 			UART_DMA_OUT[i]=0x00;
 		}
 
 		int i = 0;
 
-		  while ((*(string+i) != '\r' && *(string+i+1) != '\n') || i == 80){
+		  while ((*(string+i) != '\r' && *(string+i+1) != '\n') || i == 70){
 
 			  UART_DMA_OUT[i+100]=SendMessageStack[PopStackPointer].MESSAGE[i];
 
 			  i++;
 		  }
 
+}
+
+float RecreateFloats(int startadress){
+	   /************Input Data to float**************/
+	static int INT;
+	static float result;
+	   INT = UARTDATA_CHECKED[startadress+3] 			|
+	   		(UARTDATA_CHECKED[startadress+2] << 8) 		|
+	   		(UARTDATA_CHECKED[startadress+1] << 16) 	|
+	   		(UARTDATA_CHECKED[startadress] << 24);
+
+	   memcpy(&result, &INT, sizeof(result));
+
+	   if (result > 20){
+		   result = 20;
+	   }
+
+	   return result;
+	   /*********************************************/
 }

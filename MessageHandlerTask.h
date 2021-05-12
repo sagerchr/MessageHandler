@@ -25,10 +25,10 @@ uint8_t readout;
 #ifdef DISPLAY
 typedef struct Message {
 
-   char MESSAGE[80];
+   char MESSAGE[70];
    int Message_ID;
    int status;
-   int payload;
+   float payload;
 }  Message;
 Message ReceiveMessageStack[MAXSTACK];
 Message SendMessageStack[MAXSTACK];
