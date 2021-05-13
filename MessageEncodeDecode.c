@@ -13,7 +13,7 @@
 int MessageID_RECEIVE;
 uint32_t ID_COUNT;
 uint16_t MessageID, ReceivedMessageID;
-int SendMessageStackPointer,PopStackPointer, ReceiveMessageStackPointer, UnsentMessages;
+static int SendMessageStackPointer,PopStackPointer, ReceiveMessageStackPointer, UnsentMessages;
 void InitMeassageHandler(){
 	SendMessageStackPointer = -1;
 	PopStackPointer = -1;
@@ -30,17 +30,21 @@ void InitMeassageHandler(){
 //###################################################//
 //######## Push a new Message to the Stack ##########//
 //###################################################//
-void pushToMessageQueue(char *String, float payload)
+void sendMessage(char *String, float payload)
 {
 	if (SendMessageStackPointer == MAXSTACK-1){
 		SendMessageStackPointer = -1;			//Reset WriteStackPointer if end of Queue is reached
 		}
 		SendMessageStackPointer = SendMessageStackPointer + 1; //Increment Write StackPointer
-
+		#ifdef DISPLAY
+		#else
+		SendMessageStackPointer_helper = SendMessageStackPointer;
+		#endif
         strcpy(SendMessageStack[SendMessageStackPointer].MESSAGE, String); //Fill Message to the Stack
         SendMessageStack[SendMessageStackPointer].Message_ID = ID_COUNT++; //Set Message_ID
         SendMessageStack[SendMessageStackPointer].status = 5; //Set Status to 5 "not yet sent to slave"
         SendMessageStack[SendMessageStackPointer].payload = payload; //Set Status to 5 "not yet sent to slave"
+
 }
 
 
@@ -113,6 +117,10 @@ void popFromMessageQueue()
 
 void getMessageToReciveStack()
 {
+	#ifdef DISPLAY
+	#else
+	ReceiveMessageStackPointer_helper = ReceiveMessageStackPointer;
+	#endif
 
 	MessageID_RECEIVE = (UARTDATA_CHECKED[182]<<8) | (UARTDATA_CHECKED[181] & 0xFF);
 	UART_DMA_OUT[184] = MessageID_RECEIVE & 0x00FF;
@@ -196,7 +204,7 @@ float RecreateFloats(int startadress){
 	   memcpy(&result, &INT, sizeof(result));
 
 	   if (result > 20){
-		   result = 20;
+		  // result = 20;
 	   }
 
 	   return result;

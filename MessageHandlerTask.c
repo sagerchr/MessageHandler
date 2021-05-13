@@ -10,77 +10,130 @@
 extern void MessageHandlerTask(void *argument);
 
 #ifdef DISPLAY
-extern xQueueHandle messageIN; //Queue for Incoming Messages
-extern xQueueHandle messageOUT; //Queue for Outgoing Messages
+extern xQueueHandle messageFORHandler; //Queue for Incoming Messages
+extern xQueueHandle messageFROMHandler; //Queue for Incoming Messages
 extern xQueueHandle messageAudioStream; //Queue for Send AudioStream to Display
-
+struct Message MessageINTOHandler;
+struct Message MessageFROMHandler;
 extern UART_HandleTypeDef huart6; //UART Handle for Transport
 #else
 extern UART_HandleTypeDef huart6; //UART Handle for Transport
 #endif
 
+//######################<<<<ENQUEUE AUDIOSTREAM TO MODEL>>>>###########################//
+//#####################################################################################//
+//status
+//	5  = new Message in the SendBuffer
+//	10 = new Message was put on the UART
+//	40 = confirmation by the Slave that Message was successfully read
+//
+//
+//-------------------------------------------------------------------------------------
+//	80 = Meassage was Enqueud by the slave
+//	99 = Message was not used by the slave
+//
+//-------------------------------------------------------------------------------------
+
+
+
 void MessageHandlerTask(void *argument)
 {
 	HAL_UART_Receive_DMA(&huart6, UART_DMA_IN, RX_IN_SIZE);
 	HAL_UART_Transmit_DMA(&huart6, UART_DMA_OUT, TX_OUT_SIZE);
-	uint8_t watchdog = 0;
+	//Display Buffers of AudioStream
     p_Bufferd = 0.1;
-    p_MAXBufferd = 0.001;
-
-
+    p_MAXBufferd = 0.01;
+    //init the MessageHandler
     InitMeassageHandler();
-
+    //Intervall of UART sending
 	#ifdef DISPLAY
-    UARTsendIntervall = 10;
+    UARTsendIntervall = 4;
 	#else
-    UARTsendIntervall = 2;
+    UARTsendIntervall = 1;
 	#endif
-    MessagesendIntervall = 50;
+    //Watchdog
+    uint32_t watchdog = 0;
+    watchdogMessageIntervall = 100;
+
   for(;;)
   {
+	//increment counter
+	count++;
 
-
-	watchdog++;
+	//######################<<<<ENQUEUE AUDIOSTREAM TO MODEL>>>>###########################//
+	//#####################################################################################//
 	#ifdef DISPLAY
 	DecodeAudioStream(); //DecodeThe AudioStream and send into Queue.
-	xQueueSend(messageAudioStream, &AudioStreamToModel, 0);//Fill the Queue of AudioStream to the Model in TouchGFX
-	UART_DMA_OUT[0] = '#';
-	UART_DMA_OUT[1] = 's';
-	UART_DMA_OUT[2] = 't';
-	UART_DMA_OUT[3] = 'a';
-	UART_DMA_OUT[10] = watchdog;
+	xQueueSend(messageAudioStream, &AudioStreamToModel, 0);//Fill the Queue of AudioStream
 	#else
 	if(DisplayUpdate == 0){HAL_UART_DMAPause(&huart6);}
-	EncodeAudioStream();
+
 	#endif
+	//#####################################################################################//
+	//#####################################################################################//
 
-	readout = ReceiveMessageStack[0].Message_ID;
 
-	//##############SENDING UART################################//
-	count++;
-	count2++;
-
+	//######################<<<<SENDING UART TO PHYSICAL LAYER>>>>#########################//
+	//#####################################################################################//
 	if(count>UARTsendIntervall){
 		popFromMessageQueue();
-		UARTSEND();
+		EncodeAudioStream();
+		UARTSEND();	//Send UART to physical OUT
 		count = 0;
 		#ifdef DISPLAY
 		#else
-		resetMax = 1;
+		resetMax = 1; //Resetting the AudioStream buffer
 		#endif
 	}
+	//#####################################################################################//
+	//#####################################################################################//
 
-	//#########################################################//
-	if(count2>MessagesendIntervall){
-		count2=0;
-		#ifdef DISPLAY
-		pushToMessageQueue("Hello From Display", 1.23);
-		#else
-		pushToMessageQueue("Hello From MainEngine", 1.24);
-		#endif
+
+	//######################<<<<Sending Queued IN Message to slave>>>>#####################//
+	//#####################################################################################//
+	#ifdef DISPLAY
+	if(xQueueReceive(messageFORHandler, &MessageINTOHandler, 0) == pdTRUE)
+	{
+		sendMessage(MessageINTOHandler.MESSAGE, MessageINTOHandler.payload);
 	}
+	#else
+	#endif
+	//#####################################################################################//
+	//#####################################################################################//
 
 
+	//##########################<<<<Enqueue Message to Process>>>>#########################//
+	//#####################################################################################//
+	#ifdef DISPLAY
+
+	for(int i=0; i<MAXSTACK; i++)
+		{
+			if(ReceiveMessageStack[i].status == 99){
+			ReceiveMessageStack[i].status = 80;
+
+			MessageFROMHandler = ReceiveMessageStack[i];
+
+			xQueueSend(messageFROMHandler, &MessageFROMHandler,0);
+			}
+		}
+
+	#else
+	#endif
+	//#####################################################################################//
+	//#####################################################################################//
+
+
+	//######################<<<<Sending WatchdogMessage to slave>>>>#######################//
+	//#####################################################################################//
+	countWatchdogIntervall++;
+
+	if(countWatchdogIntervall>watchdogMessageIntervall){
+		watchdog++;
+		countWatchdogIntervall=0;
+		sendMessage("WatchdogMessageHandler:", watchdog);
+	}
+	//#####################################################################################//
+	//#####################################################################################//
 
 	#ifdef DISPLAY
 	maxval1=0;maxval2=0;maxval3=0;maxval4=0;maxval5=0;maxval6=0;

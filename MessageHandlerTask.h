@@ -17,10 +17,9 @@
 struct AudioStream AudioStreamToModel;
 struct AudioStream AudioStreamFromProcessor;
 uint8_t count;
-uint16_t count2;
+uint16_t countWatchdogIntervall;
 uint8_t UARTsendIntervall;
-uint16_t MessagesendIntervall;
-uint8_t readout;
+uint16_t watchdogMessageIntervall;
 
 #ifdef DISPLAY
 typedef struct Message {

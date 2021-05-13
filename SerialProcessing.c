@@ -77,16 +77,20 @@ void UARTRECIVE(){
 void UARTSEND(){
 	HAL_UART_DMAPause(&huart6);
 
-
-
 	uint8_t checksum = 0;
 	uint16_t checksum16 = 0;
+
+	UART_DMA_OUT[0] = '#';
+	UART_DMA_OUT[1] = 's';
+	UART_DMA_OUT[2] = 't';
+	UART_DMA_OUT[3] = 'a';
+
 	for(int i = 0; i < 198; i++) {
 			checksum += UART_DMA_OUT[i];
 			checksum16 += UART_DMA_OUT[i];
 		  }
-	  UART_DMA_OUT[198]=checksum16 & 0x00FF; //low byte
-	  UART_DMA_OUT[199]=checksum16 >> 8; //high byte
+	UART_DMA_OUT[198]=checksum16 & 0x00FF; //low byte
+	UART_DMA_OUT[199]=checksum16 >> 8; //high byte
 
 
 

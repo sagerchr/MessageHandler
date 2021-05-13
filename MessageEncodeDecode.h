@@ -9,7 +9,7 @@
 #define APPLICATION_USER_TASKS_MESSAGEHANDLERTASK_MESSAGEENCODEDECODE_H_
 
 void InitMeassageHandler();
-void pushToMessageQueue(char *String, float payload);
+void sendMessage(char *String, float payload);
 void popFromMessageQueue();
 void getMessageToReciveStack();
 void WriteMessage (char *string);
