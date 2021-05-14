@@ -53,10 +53,18 @@ void sendMessage(char *String, float payload)
 //#####################################################################//
 void popFromMessageQueue()
 {
+
+	#ifdef DISPLAY
+	#else
+	PopStackPointer_helper = PopStackPointer;
+	#endif
+
 	char *String;
 	char data[sizeof(float)];
-	float f = -1.236;
 	char a = data[0];char b = data[1];char c = data[2];char d = data[3];
+
+	float payload;
+
 	//################Check if the last Message was read successfully bz the slave####################//
 	ReceivedMessageID = (UARTDATA_CHECKED[185]<<8) | (UARTDATA_CHECKED[184] & 0xFF);
 	if(ReceivedMessageID == MessageID && SendProcess == 1){
@@ -85,15 +93,16 @@ void popFromMessageQueue()
 
 	        strcpy(String, SendMessageStack[PopStackPointer].MESSAGE);
 
-	  		WriteMessage (String);  //Write Message to the UART_transmit
+	        WriteMessage (String, PopStackPointer);  //Write Message to the UART_transmit
 
 	  		MessageID = SendMessageStack[PopStackPointer].Message_ID;
-	  		UART_DMA_OUT[181] = SendMessageStack[PopStackPointer].Message_ID  & 0x00FF; //low byte
-	  		UART_DMA_OUT[182] = SendMessageStack[PopStackPointer].Message_ID >> 8; //high byte
+			UART_DMA_OUT[181] = SendMessageStack[PopStackPointer].Message_ID  & 0x00FF; //low byte
+			UART_DMA_OUT[182] = SendMessageStack[PopStackPointer].Message_ID >> 8; //high byte
 
 	  		UART_DMA_OUT[183] = SendMessageStack[PopStackPointer].status; //Put the Status on the UART_transmit
 
-	  		memcpy(data, &SendMessageStack[PopStackPointer].payload, sizeof &SendMessageStack[PopStackPointer].payload);    // send data
+	  		payload = SendMessageStack[PopStackPointer].payload;
+	  		memcpy(data, &payload, sizeof (payload));
 	  		a = data[0]; b = data[1];c = data[2];d = data[3];
 	  		UART_DMA_OUT[171]=d;
 	  		UART_DMA_OUT[172]=c;
@@ -103,10 +112,7 @@ void popFromMessageQueue()
 	  		SendProcess = 1;
 		}
 
-	#ifdef DISPLAY
-	#else
-	PopStackPointer_helper = PopStackPointer;
-	#endif
+
 
 
 }
@@ -175,7 +181,7 @@ void getMessageToReciveStack()
 
 
 
-void WriteMessage (char *string){
+void WriteMessage (char *string, uint32_t PopStackPointer_writing){
 
 		for(int i = 100; i < 170; i++){
 			UART_DMA_OUT[i]=0x00;
@@ -185,7 +191,7 @@ void WriteMessage (char *string){
 
 		  while ((*(string+i) != '\r' && *(string+i+1) != '\n') || i == 70){
 
-			  UART_DMA_OUT[i+100]=SendMessageStack[PopStackPointer].MESSAGE[i];
+			  UART_DMA_OUT[i+100]=SendMessageStack[PopStackPointer_writing].MESSAGE[i];
 
 			  i++;
 		  }

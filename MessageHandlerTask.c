@@ -41,19 +41,19 @@ void MessageHandlerTask(void *argument)
 	HAL_UART_Receive_DMA(&huart6, UART_DMA_IN, RX_IN_SIZE);
 	HAL_UART_Transmit_DMA(&huart6, UART_DMA_OUT, TX_OUT_SIZE);
 	//Display Buffers of AudioStream
-    p_Bufferd = 0.1;
+    p_Bufferd = 0.03;
     p_MAXBufferd = 0.01;
     //init the MessageHandler
     InitMeassageHandler();
     //Intervall of UART sending
 	#ifdef DISPLAY
-    UARTsendIntervall = 4;
+    UARTsendIntervall = 1;
 	#else
     UARTsendIntervall = 1;
 	#endif
     //Watchdog
     uint32_t watchdog = 0;
-    watchdogMessageIntervall = 100;
+    watchdogMessageIntervall = 50;
 
   for(;;)
   {
@@ -71,23 +71,6 @@ void MessageHandlerTask(void *argument)
 	#endif
 	//#####################################################################################//
 	//#####################################################################################//
-
-
-	//######################<<<<SENDING UART TO PHYSICAL LAYER>>>>#########################//
-	//#####################################################################################//
-	if(count>UARTsendIntervall){
-		popFromMessageQueue();
-		EncodeAudioStream();
-		UARTSEND();	//Send UART to physical OUT
-		count = 0;
-		#ifdef DISPLAY
-		#else
-		resetMax = 1; //Resetting the AudioStream buffer
-		#endif
-	}
-	//#####################################################################################//
-	//#####################################################################################//
-
 
 	//######################<<<<Sending Queued IN Message to slave>>>>#####################//
 	//#####################################################################################//
@@ -131,6 +114,22 @@ void MessageHandlerTask(void *argument)
 		watchdog++;
 		countWatchdogIntervall=0;
 		sendMessage("WatchdogMessageHandler:", watchdog);
+		sendMessage("DemoValue:", 0.1 * watchdog);
+	}
+	//#####################################################################################//
+	//#####################################################################################//
+
+	//######################<<<<SENDING UART TO PHYSICAL LAYER>>>>#########################//
+	//#####################################################################################//
+	if(count>UARTsendIntervall){
+		popFromMessageQueue();
+		EncodeAudioStream();
+		UARTSEND();	//Send UART to physical OUT
+		count = 0;
+		#ifdef DISPLAY
+		#else
+		resetMax = 1; //Resetting the AudioStream buffer
+		#endif
 	}
 	//#####################################################################################//
 	//#####################################################################################//
