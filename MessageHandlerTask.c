@@ -17,6 +17,11 @@ struct Message MessageINTOHandler;
 struct Message MessageFROMHandler;
 extern UART_HandleTypeDef huart6; //UART Handle for Transport
 #else
+
+xQueueHandle messageFORHandler; //Queue for Incoming Messages
+xQueueHandle messageFROMHandler; //Queue for Incoming Messages
+struct Message MessageINTOHandler;
+struct Message MessageFROMHandler;
 extern UART_HandleTypeDef huart6; //UART Handle for Transport
 #endif
 
@@ -38,6 +43,7 @@ extern UART_HandleTypeDef huart6; //UART Handle for Transport
 
 void MessageHandlerTask(void *argument)
 {
+
 	HAL_UART_Receive_DMA(&huart6, UART_DMA_IN, RX_IN_SIZE);
 	HAL_UART_Transmit_DMA(&huart6, UART_DMA_OUT, TX_OUT_SIZE);
 	//Display Buffers of AudioStream
@@ -53,7 +59,8 @@ void MessageHandlerTask(void *argument)
 	#endif
     //Watchdog
     uint32_t watchdog = 0;
-    watchdogMessageIntervall = 50;
+    uint16_t countWatchdogIntervall = 0;
+    uint16_t watchdogMessageIntervall = 200;
 
   for(;;)
   {
@@ -66,7 +73,7 @@ void MessageHandlerTask(void *argument)
 	DecodeAudioStream(); //DecodeThe AudioStream and send into Queue.
 	xQueueSend(messageAudioStream, &AudioStreamToModel, 0);//Fill the Queue of AudioStream
 	#else
-	if(DisplayUpdate == 0){HAL_UART_DMAPause(&huart6);}
+	//if(DisplayUpdate == 0){HAL_UART_DMAPause(&huart6);}
 
 	#endif
 	//#####################################################################################//
@@ -80,6 +87,10 @@ void MessageHandlerTask(void *argument)
 		sendMessage(MessageINTOHandler.MESSAGE, MessageINTOHandler.payload);
 	}
 	#else
+	if(xQueueReceive(messageFORHandler, &MessageINTOHandler, 0) == pdTRUE)
+	{
+		sendMessage(MessageINTOHandler.MESSAGE, MessageINTOHandler.payload);
+	}
 	#endif
 	//#####################################################################################//
 	//#####################################################################################//
@@ -101,6 +112,16 @@ void MessageHandlerTask(void *argument)
 		}
 
 	#else
+	for(int i=0; i<MAXSTACK; i++)
+		{
+			if(ReceiveMessageStack[i].status == 99){
+			ReceiveMessageStack[i].status = 80;
+
+			MessageFROMHandler = ReceiveMessageStack[i];
+
+			xQueueSend(messageFROMHandler, &MessageFROMHandler,0);
+			}
+		}
 	#endif
 	//#####################################################################################//
 	//#####################################################################################//
@@ -137,9 +158,9 @@ void MessageHandlerTask(void *argument)
 	#ifdef DISPLAY
 	maxval1=0;maxval2=0;maxval3=0;maxval4=0;maxval5=0;maxval6=0;
 	#else
-	if(DisplayUpdate == 0){HAL_UART_DMAResume(&huart6);}
+	//if(DisplayUpdate == 0){HAL_UART_DMAResume(&huart6);}
 	#endif
-	vTaskDelay(10);
+	vTaskDelay(5);
   }
 }
 

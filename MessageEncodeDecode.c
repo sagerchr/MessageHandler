@@ -54,10 +54,7 @@ void sendMessage(char *String, float payload)
 void popFromMessageQueue()
 {
 
-	#ifdef DISPLAY
-	#else
-	PopStackPointer_helper = PopStackPointer;
-	#endif
+
 
 	char *String;
 	char data[sizeof(float)];
@@ -85,15 +82,18 @@ void popFromMessageQueue()
 			PopStackPointer = PopStackPointer+1;
 		}
 
-
+		#ifdef DISPLAY
+		#else
+		PopStackPointer_helper = PopStackPointer;
+		#endif
 
 		if(SendMessageStack[PopStackPointer].status == 5 && SendProcess == 0){
 
 			SendMessageStack[PopStackPointer].status = 10; //Set Status to 10 "sent to slave"
 
-	        strcpy(String, SendMessageStack[PopStackPointer].MESSAGE);
+	        //strcpy(String, SendMessageStack[PopStackPointer].MESSAGE);
 
-	        WriteMessage (String, PopStackPointer);  //Write Message to the UART_transmit
+	        WriteMessage (PopStackPointer);  //Write Message to the UART_transmit
 
 	  		MessageID = SendMessageStack[PopStackPointer].Message_ID;
 			UART_DMA_OUT[181] = SendMessageStack[PopStackPointer].Message_ID  & 0x00FF; //low byte
@@ -181,18 +181,13 @@ void getMessageToReciveStack()
 
 
 
-void WriteMessage (char *string, uint32_t PopStackPointer_writing){
-
-		for(int i = 100; i < 170; i++){
-			UART_DMA_OUT[i]=0x00;
-		}
+void WriteMessage (uint32_t PopStackPointer_writing){
 
 		int i = 0;
 
-		  while ((*(string+i) != '\r' && *(string+i+1) != '\n') || i == 70){
-
+		while (i <= 70){
+			  UART_DMA_OUT[i]=0x00;
 			  UART_DMA_OUT[i+100]=SendMessageStack[PopStackPointer_writing].MESSAGE[i];
-
 			  i++;
 		  }
 

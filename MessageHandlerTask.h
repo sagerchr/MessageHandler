@@ -17,9 +17,7 @@
 struct AudioStream AudioStreamToModel;
 struct AudioStream AudioStreamFromProcessor;
 uint8_t count;
-uint16_t countWatchdogIntervall;
 uint8_t UARTsendIntervall;
-uint16_t watchdogMessageIntervall;
 
 #ifdef DISPLAY
 typedef struct Message {
@@ -32,5 +30,4 @@ typedef struct Message {
 Message ReceiveMessageStack[MAXSTACK];
 Message SendMessageStack[MAXSTACK];
 #endif
-
 #endif /* APPLICATION_USER_TASKS_MESSAGEHANDLERTASK_H_ */

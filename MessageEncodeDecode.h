@@ -12,7 +12,7 @@ void InitMeassageHandler();
 void sendMessage(char *String, float payload);
 void popFromMessageQueue();
 void getMessageToReciveStack();
-void WriteMessage (char *string);
+static void WriteMessage (uint32_t PopStackPointer_writing);
 float RecreateFloats(int startadress);
 
 
