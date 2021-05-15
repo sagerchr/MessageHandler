@@ -18,6 +18,7 @@ struct Message MessageFROMHandler;
 extern UART_HandleTypeDef huart6; //UART Handle for Transport
 #else
 
+xQueueHandle messageOSCHandler;
 xQueueHandle messageFORHandler; //Queue for Incoming Messages
 xQueueHandle messageFROMHandler; //Queue for Incoming Messages
 struct Message MessageINTOHandler;
@@ -134,8 +135,11 @@ void MessageHandlerTask(void *argument)
 	if(countWatchdogIntervall>watchdogMessageIntervall){
 		watchdog++;
 		countWatchdogIntervall=0;
-		sendMessage("WatchdogMessageHandler:", watchdog);
-		sendMessage("DemoValue:", 0.1 * watchdog);
+		#ifdef DISPLAY
+		sendMessage("WatchdogDisplay", watchdog);
+		#else
+		sendMessage("WatchdogMainEngine", watchdog);
+		#endif
 	}
 	//#####################################################################################//
 	//#####################################################################################//
