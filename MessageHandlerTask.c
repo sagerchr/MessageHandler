@@ -18,7 +18,8 @@ struct Message MessageFROMHandler;
 extern UART_HandleTypeDef huart6; //UART Handle for Transport
 #else
 
-xQueueHandle messageOSCHandler;
+xQueueHandle messageFROM_OSCHandler;
+xQueueHandle messageFOR_OSCHandler;
 xQueueHandle messageFORHandler; //Queue for Incoming Messages
 xQueueHandle messageFROMHandler; //Queue for Incoming Messages
 struct Message MessageINTOHandler;
