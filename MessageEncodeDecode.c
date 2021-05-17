@@ -14,6 +14,8 @@ int MessageID_RECEIVE;
 uint32_t ID_COUNT;
 uint16_t MessageID, ReceivedMessageID;
 static int SendMessageStackPointer,PopStackPointer, ReceiveMessageStackPointer, UnsentMessages;
+
+
 void InitMeassageHandler(){
 	SendMessageStackPointer = -1;
 	PopStackPointer = -1;
@@ -24,6 +26,11 @@ void InitMeassageHandler(){
 				{
 					ReceiveMessageStack[i].Message_ID = 29;
 				}
+
+		#ifdef DISPLAY
+		#else
+		FlushDisplay=1;
+		#endif
 }
 //###################################################//
 
