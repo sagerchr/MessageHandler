@@ -14,14 +14,14 @@ int MessageID_RECEIVE;
 uint32_t ID_COUNT;
 uint16_t MessageID, ReceivedMessageID;
 static int SendMessageStackPointer,PopStackPointer, ReceiveMessageStackPointer, UnsentMessages;
-
+int timeout;
 
 void InitMeassageHandler(){
 	SendMessageStackPointer = -1;
 	PopStackPointer = -1;
 	ReceiveMessageStackPointer = -1;
 	ID_COUNT = 0;
-
+	timeout = 100;
 	for(int i=0; i<MAXSTACK; i++)
 				{
 					ReceiveMessageStack[i].Message_ID = 29;
@@ -67,16 +67,20 @@ void popFromMessageQueue()
 	char data[sizeof(float)];
 	char a = data[0];char b = data[1];char c = data[2];char d = data[3];
 
-	float payload;
+	static float payload;
 
 	//################Check if the last Message was read successfully bz the slave####################//
+
+
 	ReceivedMessageID = (UARTDATA_CHECKED[185]<<8) | (UARTDATA_CHECKED[184] & 0xFF);
-	if(ReceivedMessageID == MessageID && SendProcess == 1){
+	if((ReceivedMessageID == MessageID && SendProcess == 1)||timeout <= 0){
 		  SendMessageStack[PopStackPointer].status = 40; //Check Message as successfully read by slave
 		  UART_DMA_OUT[183] = 0; //Tell slave there is no Message to read
 		  SendProcess = 0; //Send Process is done
+		  timeout = 20;
 	}
 
+	if(SendProcess){timeout--;} //countdown TimeOut for Received by slave
 
 	//################################################################################################//
 
@@ -154,6 +158,19 @@ void getMessageToReciveStack()
 			}
 		}
 
+		//Find youngest Message
+		int index_youngest = 0;
+		int id_youngest = 9999999;
+
+		for(int i=0; i<MAXSTACK; i++)
+		{
+			if (ReceiveMessageStack[i].Message_ID < id_youngest){
+				id_youngest = ReceiveMessageStack[i].Message_ID;
+			}
+
+			index_youngest = i;
+		}
+
 		if(new_ID)
 		{
 
@@ -162,6 +179,7 @@ void getMessageToReciveStack()
 					ReceiveMessageStackPointer = 0;			//Reset WriteStackPointer if end of Queue is reached
 				}
 
+/*
 				for(int i = 100; i < 170; i++)
 				{
 					ReceiveMessageStack[ReceiveMessageStackPointer].MESSAGE[i-100] = UARTDATA_CHECKED[i];
@@ -172,6 +190,24 @@ void getMessageToReciveStack()
 				ReceiveMessageStack[ReceiveMessageStackPointer].Message_ID = MessageID_RECEIVE;
 				ReceiveMessageStack[ReceiveMessageStackPointer].status = 99; // MARK as unconsumed
 				ReceiveMessageStack[ReceiveMessageStackPointer].payload = RecreateFloats(171);
+*/
+
+				for(int i = 100; i < 170; i++)
+				{
+					ReceiveMessageStack[index_youngest].MESSAGE[i-100] = UARTDATA_CHECKED[i];
+				}
+				//Show Master that Message was read succesfully
+
+
+				ReceiveMessageStack[index_youngest].Message_ID = MessageID_RECEIVE;
+				ReceiveMessageStack[index_youngest].status = 99; // MARK as unconsumed
+				ReceiveMessageStack[index_youngest].payload = RecreateFloats(171);
+
+
+
+
+
+
 
 
 				ReceiveMessageStackPointer++;
@@ -193,7 +229,7 @@ void WriteMessage (uint32_t PopStackPointer_writing){
 		int i = 0;
 
 		while (i <= 70){
-			  UART_DMA_OUT[i]=0x00;
+			  UART_DMA_OUT[i+100]=0x00;
 			  UART_DMA_OUT[i+100]=SendMessageStack[PopStackPointer_writing].MESSAGE[i];
 			  i++;
 		  }

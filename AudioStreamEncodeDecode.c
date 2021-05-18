@@ -266,12 +266,12 @@ void DecodeAudioStream(){
 	  OutputRight.RMS_max = f_outputRight_DB_RMS_MAXbufferd;
 
 
-
+/*
 		for(int i=0; i<50; i++){
 			if (f_spectrumLeft_bufferd[i]<UARTDATA[i+50]){f_spectrumLeft_bufferd[i] = UARTDATA[i+50];}
 			else {f_spectrumLeft_bufferd[i] -=p_Bufferd*(f_spectrumLeft_bufferd[i]-UARTDATA[i+50]);}
 		}
-
+*/
 		AudioStreamToModel.InputLeft = InputLeft;
 		AudioStreamToModel.InputRight = InputRight;
 		AudioStreamToModel.OutputLeft = OutputLeft;
@@ -392,6 +392,8 @@ void EncodeAudioStream(){
 
 			  UART_DMA_OUT[60]=reductLeft;
 			  UART_DMA_OUT[61]=reductRight;
+
+
 }
 
 

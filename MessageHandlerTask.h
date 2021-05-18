@@ -18,7 +18,7 @@ struct AudioStream AudioStreamToModel;
 struct AudioStream AudioStreamFromProcessor;
 uint8_t count;
 uint8_t UARTsendIntervall;
-
+int lastAttackPayload;
 #ifdef DISPLAY
 typedef struct Message {
 

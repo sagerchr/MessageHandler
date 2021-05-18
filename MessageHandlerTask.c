@@ -55,14 +55,16 @@ void MessageHandlerTask(void *argument)
     InitMeassageHandler();
     //Intervall of UART sending
 	#ifdef DISPLAY
-    UARTsendIntervall = 1;
+    UARTsendIntervall = 2;
 	#else
-    UARTsendIntervall = 1;
+    UARTsendIntervall = 2;
 	#endif
     //Watchdog
     uint32_t watchdog = 0;
     uint16_t countWatchdogIntervall = 0;
     uint16_t watchdogMessageIntervall = 200;
+
+
 
   for(;;)
   {
@@ -147,16 +149,19 @@ void MessageHandlerTask(void *argument)
 
 	//######################<<<<SENDING UART TO PHYSICAL LAYER>>>>#########################//
 	//#####################################################################################//
+
+
 	if(count>UARTsendIntervall){
-		popFromMessageQueue();
-		EncodeAudioStream();
-		UARTSEND();	//Send UART to physical OUT
 		count = 0;
 		#ifdef DISPLAY
 		#else
 		resetMax = 1; //Resetting the AudioStream buffer
+		EncodeAudioStream();
 		#endif
 	}
+
+	popFromMessageQueue();
+	UARTSEND();	//Send UART to physical OUT
 	//#####################################################################################//
 	//#####################################################################################//
 
