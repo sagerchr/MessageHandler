@@ -93,11 +93,12 @@ void popFromMessageQueue()
 			PopStackPointer = PopStackPointer+1;
 		}
 
+
+
 		#ifdef DISPLAY
 		#else
-		PopStackPointer_helper = PopStackPointer;
+			PopStackPointer_helper = PopStackPointer;
 		#endif
-
 		if(SendMessageStack[PopStackPointer].status == 5 && SendProcess == 0){
 
 			SendMessageStack[PopStackPointer].status = 10; //Set Status to 10 "sent to slave"
@@ -157,7 +158,7 @@ void getMessageToReciveStack()
 			new_ID = 1;
 			}
 		}
-
+		/*
 		//Find youngest Message
 		int index_youngest = 0;
 		int id_youngest = 9999999;
@@ -170,7 +171,7 @@ void getMessageToReciveStack()
 
 			index_youngest = i;
 		}
-
+		*/
 		if(new_ID)
 		{
 
@@ -179,40 +180,18 @@ void getMessageToReciveStack()
 					ReceiveMessageStackPointer = 0;			//Reset WriteStackPointer if end of Queue is reached
 				}
 
-/*
+
 				for(int i = 100; i < 170; i++)
 				{
 					ReceiveMessageStack[ReceiveMessageStackPointer].MESSAGE[i-100] = UARTDATA_CHECKED[i];
 				}
-				//Show Master that Message was read succesfully
 
 
 				ReceiveMessageStack[ReceiveMessageStackPointer].Message_ID = MessageID_RECEIVE;
 				ReceiveMessageStack[ReceiveMessageStackPointer].status = 99; // MARK as unconsumed
 				ReceiveMessageStack[ReceiveMessageStackPointer].payload = RecreateFloats(171);
-*/
-
-				for(int i = 100; i < 170; i++)
-				{
-					ReceiveMessageStack[index_youngest].MESSAGE[i-100] = UARTDATA_CHECKED[i];
-				}
-				//Show Master that Message was read succesfully
-
-
-				ReceiveMessageStack[index_youngest].Message_ID = MessageID_RECEIVE;
-				ReceiveMessageStack[index_youngest].status = 99; // MARK as unconsumed
-				ReceiveMessageStack[index_youngest].payload = RecreateFloats(171);
-
-
-
-
-
-
-
 
 				ReceiveMessageStackPointer++;
-
-
 		}
 	}
 	#ifdef DISPLAY

@@ -287,9 +287,8 @@ void DecodeAudioStream(){
 
 void EncodeAudioStream(){
 
-	 	 	  char data[sizeof(float)];
-			  float f = -1.236;
-			  char a = data[0];char b = data[1];char c = data[2];char d = data[3];
+			static char data[sizeof(float)];
+			char a = data[0]; char b = data[1];  char c = data[2]; char d = data[3];
 
 			  UART_DMA_OUT[0]='#';
 			  UART_DMA_OUT[1]='s';

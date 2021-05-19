@@ -10,7 +10,6 @@ void UARTRECIVE(){
 	char checksum;
 	uint16_t checksum16;
 	int CheckSumOK = 0;
-
 	HAL_UART_DMAPause(&huart6);
 	 for(int i = 0; i<RX_IN_SIZE;i++){
 		 UARTDATA[i]	= 0x00;
@@ -71,6 +70,12 @@ void UARTRECIVE(){
 	   	    		 }
 	   	    		}
 
+	   	    		if (!CheckSumOK){
+	   	    			error_CheckSum++;
+	   	    		}
+	   	    		else{
+	   	    			OK_CheckSum++;
+	   	    		}
 }
 
 
@@ -92,7 +97,7 @@ void UARTSEND(){
 	UART_DMA_OUT[198]=checksum16 & 0x00FF; //low byte
 	UART_DMA_OUT[199]=checksum16 >> 8; //high byte
 
-
+	data_send++;
 
 	HAL_UART_DMAResume(&huart6);
 

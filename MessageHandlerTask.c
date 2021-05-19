@@ -6,7 +6,6 @@
 #include "queue.h"
 #include "task.h"
 
-
 extern void MessageHandlerTask(void *argument);
 
 #ifdef DISPLAY
@@ -64,7 +63,7 @@ void MessageHandlerTask(void *argument)
     uint16_t countWatchdogIntervall = 0;
     uint16_t watchdogMessageIntervall = 200;
 
-
+    int sendStackFree = 0;
 
   for(;;)
   {
@@ -91,10 +90,26 @@ void MessageHandlerTask(void *argument)
 		sendMessage(MessageINTOHandler.MESSAGE, MessageINTOHandler.payload);
 	}
 	#else
-	if(xQueueReceive(messageFORHandler, &MessageINTOHandler, 0) == pdTRUE)
-	{
-		sendMessage(MessageINTOHandler.MESSAGE, MessageINTOHandler.payload);
+
+	sendStackFree = 0;
+
+	for(int i=0; i<MAXSTACK;i++){
+		if(SendMessageStack[i].status == 40){
+			sendStackFree = 1;
+			break;
+		}
+		sendStackFree = 0;
 	}
+
+	if(sendStackFree)
+	{
+		if(xQueueReceive(messageFORHandler, &MessageINTOHandler, 0) == pdTRUE)
+		{
+			sendMessage(MessageINTOHandler.MESSAGE, MessageINTOHandler.payload);
+		}
+	}
+
+
 	#endif
 	//#####################################################################################//
 	//#####################################################################################//
@@ -170,6 +185,8 @@ void MessageHandlerTask(void *argument)
 	#else
 	//if(DisplayUpdate == 0){HAL_UART_DMAResume(&huart6);}
 	#endif
+
+
 	vTaskDelay(5);
   }
 }
