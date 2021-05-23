@@ -29,7 +29,7 @@ void InitMeassageHandler(){
 
 		#ifdef DISPLAY
 		#else
-		FlushDisplay=1;
+
 		#endif
 }
 //###################################################//
