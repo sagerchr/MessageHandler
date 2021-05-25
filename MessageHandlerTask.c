@@ -15,6 +15,7 @@ extern xQueueHandle messageAudioStream; //Queue for Send AudioStream to Display
 struct Message MessageINTOHandler;
 struct Message MessageFROMHandler;
 extern UART_HandleTypeDef huart6; //UART Handle for Transport
+int MessageHandlerInitDone;
 #else
 
 xQueueHandle messageFROM_OSCHandler;
@@ -65,7 +66,7 @@ void MessageHandlerTask(void *argument)
     uint16_t watchdogMessageIntervall = 200;
 
     int sendStackFree = 0;
-
+    MessageHandlerInitDone = 1;
   for(;;)
   {
 	//increment counter
