@@ -37,12 +37,14 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 	 }
 
 	  	getMessageToReciveStack();
-		if(UARTDATA_CHECKED[6] > maxval1){maxval1 = UARTDATA_CHECKED[6];}
+	  	if(UARTDATA_CHECKED[6] > maxval1){maxval1 = UARTDATA_CHECKED[6];}
 		if(UARTDATA_CHECKED[7] > maxval2){maxval2 = UARTDATA_CHECKED[7];}
 		if(UARTDATA_CHECKED[8] > maxval3){maxval3 = UARTDATA_CHECKED[8];}
 		if(UARTDATA_CHECKED[9] > maxval4){maxval4 = UARTDATA_CHECKED[9];}
 		if(UARTDATA_CHECKED[10] > maxval5){maxval5 = UARTDATA_CHECKED[10];}
 		if(UARTDATA_CHECKED[11] > maxval6){maxval6 = UARTDATA_CHECKED[11];}
+
+
 }
 
 
@@ -101,11 +103,14 @@ extern UART_HandleTypeDef huart6; //UART Handle for Transport
 void MessageHandlerTask(void *argument)
 {
 
+
+	HAL_GPIO_WritePin(GPIOD, CS_Pin,GPIO_PIN_SET);
+	vTaskDelay(1);
 	//HAL_UART_Receive_DMA(&huart6, UART_DMA_IN, RX_IN_SIZE);
 	//HAL_UART_Transmit_DMA(&huart6, UART_DMA_OUT, TX_OUT_SIZE);
 	//Display Buffers of AudioStream
-    p_Bufferd = 0.03;
-    p_MAXBufferd = 0.01;
+    p_Bufferd = 0.001;
+    p_MAXBufferd = 0.0001;
     //init the MessageHandler
     InitMeassageHandler();
     //Intervall of UART sending
@@ -247,7 +252,7 @@ void MessageHandlerTask(void *argument)
 	//#####################################################################################//
 
 	#ifdef DISPLAY
-	maxval1=0;maxval2=0;maxval3=0;maxval4=0;maxval5=0;maxval6=0;
+
 	#else
 	//if(DisplayUpdate == 0){HAL_UART_DMAResume(&huart6);}
 	UART_DMA_OUT[0] = '#';
