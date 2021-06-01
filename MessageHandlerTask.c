@@ -8,7 +8,40 @@
 
 
 
+uint16_t calcIncomingChecksum(){
+	uint16_t checksum16 = 0;
+
+	for(int i = 0; i < 198; i++) {
+	    checksum16 += UART_DMA_IN[i];
+	}
+	return checksum16;
+}
+
+uint16_t calcIOutgoingChecksum(){
+	uint16_t checksum16 = 0;
+
+	for(int i = 0; i < 198; i++) {
+	    checksum16 += UART_DMA_OUT[i];
+	}
+	return checksum16;
+}
+
+int compareChecksum(){
+
+	uint16_t checksum16 = 0;
+
+	checksum16 = calcIncomingChecksum();
+
+ 	 if(((checksum16 & 0x00FF) == UART_DMA_IN[199]) && ((checksum16 >> 8) == UART_DMA_IN[198])){
+ 	      	return 1;
+ 	      }
+ 	      else{
+ 	      	return 0;
+ 	      }
+}
+
 extern void MessageHandlerTask(void *argument);
+
 
 #ifdef DISPLAY
 extern xQueueHandle messageFORHandler; //Queue for Incoming Messages
@@ -23,18 +56,48 @@ extern SPI_HandleTypeDef hspi2;
 
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 
-	HAL_SPI_TransmitReceive_DMA(&hspi2,(uint8_t*)UART_DMA_OUT,(uint8_t*)UART_DMA_IN, 200);
+
+
 	UART_DMA_OUT[0] = '#';
 	UART_DMA_OUT[1] = 's';
 	UART_DMA_OUT[2] = 't';
 	UART_DMA_OUT[3] = 'a';
-	if(UART_DMA_IN[0] != '#' && UART_DMA_IN[1] != 's' && UART_DMA_IN[2] != 't' && UART_DMA_IN[3] != 'a'){
-		NVIC_SystemReset();
+
+	int index=0;
+	for(int i=0; i<10; i++){
+		if(UART_DMA_IN[i] == '#'){
+			index = i;
+			break;
+		}
 	}
 
-	  	 for (int i = 0; i< 200;i++){
-	  		UARTDATA_CHECKED[i] = UART_DMA_IN[i];
-	 }
+
+	for (int i = 0; i< 200;i++){
+		UART_DMA_IN_TEMP[i] = UART_DMA_IN[i+index];
+	}
+
+
+	//################################<<<<CHECK THE CHECKSUM>>>>###########################//
+	//#####################################################################################//
+
+	checksumCalculated = 0;
+	for(int i = 0; i < 195; i++) {
+		checksumCalculated += UART_DMA_IN_TEMP[i];
+	}
+
+	checksumIncoming = (UART_DMA_IN_TEMP[198] << 24) | (UART_DMA_IN_TEMP[197] << 16) | (UART_DMA_IN_TEMP[196] << 8) | UART_DMA_IN_TEMP[195];
+
+	if (checksumCalculated == checksumIncoming){
+		for (int i = 0; i< 200;i++){
+			  UARTDATA_CHECKED[i] = UART_DMA_IN_TEMP[i];
+		}
+		checksumOK++;
+	}
+	else{
+		checksumERROR++;
+	}
+	//#####################################################################################//
+	//#####################################################################################//
 
 	  	getMessageToReciveStack();
 	  	if(UARTDATA_CHECKED[6] > maxval1){maxval1 = UARTDATA_CHECKED[6];}
@@ -44,6 +107,18 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 		if(UARTDATA_CHECKED[10] > maxval5){maxval5 = UARTDATA_CHECKED[10];}
 		if(UARTDATA_CHECKED[11] > maxval6){maxval6 = UARTDATA_CHECKED[11];}
 
+		HAL_SPI_DMAPause(&hspi2);
+		checksumOutgoing = 0;
+		for(int i = 0; i < 195; i++) {
+		    checksumOutgoing += UART_DMA_OUT[i];
+		}
+
+		UART_DMA_OUT[195]= checksumOutgoing & 0xFF;
+		UART_DMA_OUT[196]= (checksumOutgoing >> 8)  & 0xFF;
+		UART_DMA_OUT[197]= (checksumOutgoing >> 16) & 0xFF;
+		UART_DMA_OUT[198]= (checksumOutgoing >> 24) & 0xFF;
+		HAL_SPI_DMAResume(&hspi2);
+		HAL_SPI_TransmitReceive_DMA(&hspi2,(uint8_t*)UART_DMA_OUT,(uint8_t*)UART_DMA_IN, 200);
 
 }
 
@@ -63,12 +138,32 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi){
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 
 
-	  	 for (int i = 0; i< 200;i++){
-	  		UARTDATA_CHECKED[i] = UART_DMA_IN[i];
-	 }
+
+
+	//################################<<<<CHECK THE CHECKSUM>>>>###########################//
+	//#####################################################################################//
+	checksumCalculated = 0;
+	for(int i = 0; i < 195; i++) {
+		checksumCalculated += UART_DMA_IN[i];
+	}
+
+
+	checksumIncoming = (UART_DMA_IN[198] << 24) | (UART_DMA_IN[197] << 16) | (UART_DMA_IN[196] << 8) | UART_DMA_IN[195];
+
+	if (checksumCalculated == checksumIncoming){
+		for (int i = 0; i< 200;i++){
+			  UARTDATA_CHECKED[i] = UART_DMA_IN[i];
+		}
+		checksumOK++;
+	}
+	else{
+		checksumERROR++;
+	}
+	//#####################################################################################//
+	//#####################################################################################//
 
 	  	getMessageToReciveStack();
-
+	  	HAL_GPIO_WritePin(GPIOB, CS_POTI_Pin,GPIO_PIN_SET);
 }
 extern SPI_HandleTypeDef hspi2;
 
@@ -103,9 +198,8 @@ extern UART_HandleTypeDef huart6; //UART Handle for Transport
 void MessageHandlerTask(void *argument)
 {
 
-
-	HAL_GPIO_WritePin(GPIOD, CS_Pin,GPIO_PIN_SET);
-	vTaskDelay(1);
+	checksumERROR = 0;
+	checksumOK = 0;
 	//HAL_UART_Receive_DMA(&huart6, UART_DMA_IN, RX_IN_SIZE);
 	//HAL_UART_Transmit_DMA(&huart6, UART_DMA_OUT, TX_OUT_SIZE);
 	//Display Buffers of AudioStream
@@ -115,22 +209,25 @@ void MessageHandlerTask(void *argument)
     InitMeassageHandler();
     //Intervall of UART sending
 	#ifdef DISPLAY
-    UARTsendIntervall = 2;
+    UARTsendIntervall =0;
     HAL_SPI_TransmitReceive_DMA(&hspi2,(uint8_t*)UART_DMA_OUT,(uint8_t*)UART_DMA_IN, 200);
 	#else
-    UARTsendIntervall = 2;
+    UARTsendIntervall = 0;
+    UART_DMA_OUT[0] = '#';
+    UART_DMA_OUT[1] = 's';
+    UART_DMA_OUT[2] = 't';
+    UART_DMA_OUT[3] = 'a';
+
+    HAL_GPIO_WritePin(GPIOB, CS_POTI_Pin,GPIO_PIN_SET);
+    HAL_SPI_TransmitReceive_DMA(&hspi2,(uint8_t*)UART_DMA_OUT,(uint8_t*)UART_DMA_IN, 200);
 	#endif
     //Watchdog
     uint32_t watchdog = 0;
     uint16_t countWatchdogIntervall = 0;
     uint16_t watchdogMessageIntervall = 200;
-
+    uint8_t DMA_ID=0;
     int sendStackFree = 0;
     MessageHandlerInitDone = 1;
-
-	char checksum;
-	uint16_t checksum16;
-	int CheckSumOK = 0;
 
   for(;;)
   {
@@ -255,11 +352,30 @@ void MessageHandlerTask(void *argument)
 
 	#else
 	//if(DisplayUpdate == 0){HAL_UART_DMAResume(&huart6);}
+
+
+	DMA_ID++;
+	HAL_SPI_DMAPause(&hspi2);
 	UART_DMA_OUT[0] = '#';
 	UART_DMA_OUT[1] = 's';
 	UART_DMA_OUT[2] = 't';
 	UART_DMA_OUT[3] = 'a';
+
+
+	checksumOutgoing = 0;
+	HAL_SPI_DMAPause(&hspi2);
+	for(int i = 0; i < 195; i++) {
+	    checksumOutgoing += UART_DMA_OUT[i];
+	}
+	HAL_GPIO_WritePin(GPIOB, CS_POTI_Pin,GPIO_PIN_RESET);
+	UART_DMA_OUT[195]= checksumOutgoing & 0xFF;
+	UART_DMA_OUT[196]= (checksumOutgoing >> 8)  & 0xFF;
+	UART_DMA_OUT[197]= (checksumOutgoing >> 16) & 0xFF;
+	UART_DMA_OUT[198]= (checksumOutgoing >> 24) & 0xFF;
+
+	HAL_SPI_DMAResume(&hspi2);
 	HAL_SPI_TransmitReceive_DMA(&hspi2,(uint8_t*)UART_DMA_OUT,(uint8_t*)UART_DMA_IN, 200);
+
 	#endif
 
 

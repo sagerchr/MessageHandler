@@ -19,9 +19,17 @@ struct AudioStream AudioStreamFromProcessor;
 uint8_t count;
 uint8_t UARTsendIntervall;
 int lastAttackPayload;
-int error_CheckSum;
-int OK_CheckSum;
 int data_send;
+
+static uint32_t checksumIncoming;
+static uint32_t checksumOutgoing;
+static uint32_t checksumCalculated;
+uint32_t checksumERROR;
+uint32_t checksumOK;
+
+uint8_t high_byte;
+uint8_t low_byte;
+
 #ifdef DISPLAY
 typedef struct Message {
 
@@ -32,5 +40,11 @@ typedef struct Message {
 }  Message;
 Message ReceiveMessageStack[MAXSTACK];
 Message SendMessageStack[MAXSTACK];
+
+
+
+
+
+
 #endif
 #endif /* APPLICATION_USER_TASKS_MESSAGEHANDLERTASK_H_ */

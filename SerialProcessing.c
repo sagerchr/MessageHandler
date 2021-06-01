@@ -4,6 +4,8 @@
  *  Created on: 16.11.2019
  *      Author: christiansager
  */
+
+/*
 #include "MessageHandlerTask.h"
 UART_HandleTypeDef huart6;
 void UARTRECIVE(){
@@ -103,5 +105,5 @@ void UARTSEND(){
 
 }
 
-
+*/
 
