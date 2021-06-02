@@ -1,17 +1,19 @@
 /*
- * UART_IO.h
+ * LowLevelDriverSPI.h
  *
- *  Created on: 16.11.2019
- *      Author: christiansager
+ *  Created on: 2 juni 2021
+ *      Author: es015742
  */
-#include "main.h"
-#include "types.h"
 
-#ifndef APP_UART_IO_H_
-#define APP_UART_IO_H_
+#ifndef MESSAGEHANDLER_LOWLEVELDRIVERSPI_H_
+#define MESSAGEHANDLER_LOWLEVELDRIVERSPI_H_
 
-void UARTRECIVE();
-void UARTSEND();
+
+void createChecksum();
+int checkChecksum();
+void resortReceived();
+void createHeader();
+
 char UARTDATA[RX_IN_SIZE];
 //char UARTDATA_CHECKED[RX_IN_SIZE];
 char UARTDATA_legacy[RX_IN_SIZE];
@@ -26,6 +28,4 @@ char UART_DMA_IN[RX_IN_SIZE];
 char UART_DMA_IN_TEMP[RX_IN_SIZE];
 char UART_DMA_OUT [TX_OUT_SIZE];
 
-#endif /* APP_UART_IO_H_ */
-
-
+#endif /* MESSAGEHANDLER_LOWLEVELDRIVERSPI_H_ */
