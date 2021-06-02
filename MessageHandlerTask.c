@@ -338,7 +338,7 @@ void MessageHandlerTask(void *argument)
 		count = 0;
 		#ifdef DISPLAY
 		#else
-		resetMax = 1; //Resetting the AudioStream buffer
+
 		EncodeAudioStream();
 		#endif
 	}
@@ -372,7 +372,7 @@ void MessageHandlerTask(void *argument)
 	UART_DMA_OUT[196]= (checksumOutgoing >> 8)  & 0xFF;
 	UART_DMA_OUT[197]= (checksumOutgoing >> 16) & 0xFF;
 	UART_DMA_OUT[198]= (checksumOutgoing >> 24) & 0xFF;
-
+	resetMax = 1; //Resetting the AudioStream buffer
 	HAL_SPI_DMAResume(&hspi2);
 	HAL_SPI_TransmitReceive_DMA(&hspi2,(uint8_t*)UART_DMA_OUT,(uint8_t*)UART_DMA_IN, 200);
 
