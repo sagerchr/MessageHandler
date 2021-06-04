@@ -87,6 +87,8 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 	if(UARTDATA_CHECKED[9] > maxval4){maxval4 = UARTDATA_CHECKED[9];}
 	if(UARTDATA_CHECKED[10] > maxval5){maxval5 = UARTDATA_CHECKED[10];}
 	if(UARTDATA_CHECKED[11] > maxval6){maxval6 = UARTDATA_CHECKED[11];}
+	if(UARTDATA_CHECKED[60] > maxval7){maxval7 = UARTDATA_CHECKED[60];}
+	if(UARTDATA_CHECKED[61] > maxval8){maxval8 = UARTDATA_CHECKED[61];}
 
 	HAL_SPI_DMAPause(&hspi2);
 	createHeader();

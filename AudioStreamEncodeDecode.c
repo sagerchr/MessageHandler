@@ -33,6 +33,8 @@ void DecodeAudioStream(){
 		i_VCARight_Indicator = maxval4;
 		i_outputLeft_Indicator = maxval5;
 		i_outputRight_Indicator = maxval6;
+		i_GainReductLeft_Indicator = UARTDATA_CHECKED[60];
+		i_GainReductRight_Indicator = UARTDATA_CHECKED[61];
 
 	  Indicator.i_VCALeft_Indicator = i_VCALeft_Indicator;
 	  Indicator.i_VCARight_Indicator = i_VCARight_Indicator;
@@ -40,6 +42,8 @@ void DecodeAudioStream(){
 	  Indicator.i_inputRight_Indicator = i_inputRight_Indicator;
 	  Indicator.i_outputLeft_Indicator = i_outputLeft_Indicator;
 	  Indicator.i_outputRight_Indicator = i_outputRight_Indicator;
+	  Indicator.i_GainReductLeft_Indicator = i_GainReductLeft_Indicator;
+	  Indicator.i_GainReductRight_Indicator = i_GainReductRight_Indicator;
 
 	  if (i_inputLeft_Indicator > i_inputLeft_Indicator_bufferd){i_inputLeft_Indicator_bufferd = i_inputLeft_Indicator;}
 	  else {i_inputLeft_Indicator_bufferd -=0.01*(i_inputLeft_Indicator_bufferd-i_inputLeft_Indicator);}

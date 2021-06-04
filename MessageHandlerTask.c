@@ -53,7 +53,7 @@ void MessageHandlerTask(void *argument)
 	checksumERROR = 0; //DEBUG helper
 	checksumOK = 0; //DEBUG helper
 
-    p_Bufferd = 0.001; //Display Buffers of AudioStream
+    p_Bufferd = 0.005; //Display Buffers of AudioStream
     p_MAXBufferd = 0.0001; //Display Buffers of AudioStream
 
     InitMeassageHandler();//init the MessageHandler
