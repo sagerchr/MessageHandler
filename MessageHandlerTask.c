@@ -162,7 +162,7 @@ void MessageHandlerTask(void *argument)
 		watchdog++;
 		countWatchdogIntervall=0;
 		#ifdef DISPLAY
-		sendMessage("WatchdogDisplay", watchdog);
+		//sendMessage("WatchdogDisplay", watchdog);
 		#else
 		sendMessage("WatchdogMainEngine", watchdog);
 		#endif
