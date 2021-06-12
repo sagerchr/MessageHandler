@@ -22,6 +22,11 @@ uint8_t UARTsendIntervall;
 
 uint32_t checksumERROR;
 uint32_t checksumOK;
+uint8_t SendConfirmed;
+
+uint32_t LastMessageIDincoming;
+uint8_t NewMessageToEnqueue;
+uint8_t NewMessageEnqueued;
 
 #ifdef DISPLAY
 typedef struct Message {

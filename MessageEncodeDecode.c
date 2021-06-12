@@ -13,10 +13,16 @@
 int MessageID_RECEIVE;
 uint32_t ID_COUNT;
 uint16_t MessageID, ReceivedMessageID;
+
+uint16_t M_ID_SEND, M_ID_ACK;
+
+
 static int SendMessageStackPointer,PopStackPointer, ReceiveMessageStackPointer, UnsentMessages;
 int timeout;
 
 void InitMeassageHandler(){
+	FirstMessage = 1;
+	SendConfirmed = 1;
 	SendMessageStackPointer = -1;
 	PopStackPointer = -1;
 	ReceiveMessageStackPointer = -1;
@@ -233,3 +239,65 @@ float RecreateFloats(int startadress){
 	   return result;
 	   /*********************************************/
 }
+
+
+
+uint8_t LastMessageConfirmed(){
+
+	M_ID_ACK = (UARTDATA_CHECKED[185]<<8) | (UARTDATA_CHECKED[184] & 0xFF);
+	if(M_ID_ACK == M_ID_SEND){
+		  return 1;
+	}
+	return 0;
+}
+
+
+void PackMessage(char *String, float payload){
+	FirstMessage = 0;
+	char data[sizeof(float)];
+	char a = data[0];char b = data[1];char c = data[2];char d = data[3];
+	int i = 0;
+	while (i <= 70){
+		  UART_DMA_OUT[i+100]=0x00;
+		  UART_DMA_OUT[i+100]=String[i];
+		  i++;
+	  }
+
+	M_ID_SEND++;
+	UART_DMA_OUT[181] = M_ID_SEND  & 0x00FF; //low byte
+	UART_DMA_OUT[182] = M_ID_SEND >> 8; //high byte
+
+	UART_DMA_OUT[183] = 10; //Put the Status on the UART_transmit
+
+	memcpy(data, &payload, sizeof (payload));
+	a = data[0]; b = data[1];c = data[2];d = data[3];
+	UART_DMA_OUT[171]=d;
+	UART_DMA_OUT[172]=c;
+	UART_DMA_OUT[173]=b;
+	UART_DMA_OUT[174]=a;
+}
+
+/*
+void CheckoutMessage(){
+	int MessageID_RECEIVE;
+	MessageID_RECEIVE = (UARTDATA_CHECKED[182]<<8) | (UARTDATA_CHECKED[181] & 0xFF);
+
+	if ((LastMessageIDincoming != MessageID_RECEIVE) && NewMessageEnqueued == 1){
+		LastMessageIDincoming = MessageID_RECEIVE;
+
+		for(int i = 100; i < 170; i++)
+		{
+			ReceivedMessage.MESSAGE[i-100] = UARTDATA_CHECKED[i];
+		}
+
+		ReceivedMessage.payload = RecreateFloats(171);
+		NewMessageToEnqueue = 1;
+		NewMessageEnqueued = 0;
+
+
+		UART_DMA_OUT[184] = MessageID_RECEIVE & 0x00FF;
+		UART_DMA_OUT[185] = MessageID_RECEIVE >> 8;
+	}
+
+}
+*/

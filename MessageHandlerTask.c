@@ -1,7 +1,7 @@
 /* MessageHandlerTask.c */
 #include "main.h"
 #include "MessageHandlerTask.h"
-
+#include "string.h"
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
@@ -67,12 +67,10 @@ void MessageHandlerTask(void *argument)
     HAL_GPIO_WritePin(GPIOB, CS_POTI_Pin,GPIO_PIN_SET);
     HAL_SPI_TransmitReceive_DMA(&hspi2,(uint8_t*)UART_DMA_OUT,(uint8_t*)UART_DMA_IN, 200);
 	#endif
-
-    uint32_t watchdog = 0; //Watchdog
-    uint16_t countWatchdogIntervall = 0; //Watchdog
-    uint16_t watchdogMessageIntervall = 200; //Watchdog
     MessageHandlerInitDone = 1; //Tell System Handler is up and running
-
+    LastMessageIDincoming =-1;
+    NewMessageToEnqueue = 0;
+    NewMessageEnqueued = 1;
   for(;;)
   {
 	//increment counter
@@ -85,105 +83,60 @@ void MessageHandlerTask(void *argument)
 	xQueueSend(messageAudioStream, &AudioStreamToModel, 0);//Fill the Queue of AudioStream
 	#else
 	//if(DisplayUpdate == 0){HAL_UART_DMAPause(&huart6);}
-
 	#endif
 	//#####################################################################################//
 	//#####################################################################################//
-
-	//######################<<<<Sending Queued IN Message to slave>>>>#####################//
-	//#####################################################################################//
-	#ifdef DISPLAY
-	if(xQueueReceive(messageFORHandler, &MessageINTOHandler, 0) == pdTRUE)
-	{
-		sendMessage(MessageINTOHandler.MESSAGE, MessageINTOHandler.payload);
-	}
-	#else
-
-	sendStackFree = 0;
-
-	for(int i=0; i<MAXSTACK;i++){
-		if(SendMessageStack[i].status == 40){
-			sendStackFree = 1;
-			break;
-		}
-		sendStackFree = 0;
-	}
-
-	if(sendStackFree)
-	{
-		if(xQueueReceive(messageFORHandler, &MessageINTOHandler, 0) == pdTRUE)
-		{
-			sendMessage(MessageINTOHandler.MESSAGE, MessageINTOHandler.payload);
-		}
-	}
-
-
-	#endif
-	//#####################################################################################//
-	//#####################################################################################//
-
 
 	//##########################<<<<Enqueue Message to Process>>>>#########################//
 	//#####################################################################################//
-	#ifdef DISPLAY
 
-	for(int i=0; i<MAXSTACK; i++)
-		{
-			if(ReceiveMessageStack[i].status == 99){
-			ReceiveMessageStack[i].status = 80;
+	int smallest = 999999;
+	int index = 0;
 
-			MessageFROMHandler = ReceiveMessageStack[i];
+	   for (int i = 0; i < MAXSTACK; i++) {
+	      if (ReceiveMessageStack[i].Message_ID < smallest && ReceiveMessageStack[i].status == 99) {
+	         smallest = ReceiveMessageStack[i].Message_ID;
+	         index = i+1;
+	      }
+	   }
 
-			xQueueSend(messageFROMHandler, &MessageFROMHandler,0);
-			}
+	   if (index != 0){
+	    ReceiveMessageStack[index-1].status = 80;
+		MessageFROMHandler = ReceiveMessageStack[index-1];
+		xQueueSend(messageFROMHandler, &MessageFROMHandler,0);
 		}
 
+	//#####################################################################################//
+	//#####################################################################################//
+
+	//######################<<<<PACK MESSAGE TO PHYSICAL LAYER>>>>#########################//
+	//#####################################################################################//
+	#ifdef DISPLAY
+	if(SendConfirmed){
+		if(xQueueReceive(messageFORHandler, &MessageINTOHandler, 0) == pdTRUE)
+		{
+			PackMessage(MessageINTOHandler.MESSAGE, MessageINTOHandler.payload);
+		}
+	SendConfirmed = 0;
+	}
 	#else
-	for(int i=0; i<MAXSTACK; i++)
+	if(LastMessageConfirmed() || FirstMessage){
+		if(xQueueReceive(messageFORHandler, &MessageINTOHandler, 0) == pdTRUE)
 		{
-			if(ReceiveMessageStack[i].status == 99){
-			ReceiveMessageStack[i].status = 80;
-
-			MessageFROMHandler = ReceiveMessageStack[i];
-
-			xQueueSend(messageFROMHandler, &MessageFROMHandler,0);
-			}
+			PackMessage(MessageINTOHandler.MESSAGE, MessageINTOHandler.payload);
 		}
+	}
+	EncodeAudioStream();
 	#endif
-	//#####################################################################################//
-	//#####################################################################################//
 
-
-	//######################<<<<Sending WatchdogMessage to slave>>>>#######################//
-	//#####################################################################################//
-	countWatchdogIntervall++;
-
-	if(countWatchdogIntervall>watchdogMessageIntervall){
-		watchdog++;
-		countWatchdogIntervall=0;
-		#ifdef DISPLAY
-		//sendMessage("WatchdogDisplay", watchdog);
-		#else
-		sendMessage("WatchdogMainEngine", watchdog);
-		#endif
-	}
-	//#####################################################################################//
-	//#####################################################################################//
-
-	//######################<<<<SENDING UART TO PHYSICAL LAYER>>>>#########################//
-	//#####################################################################################//
-	if(count>UARTsendIntervall){
-		count = 0;
-		#ifdef DISPLAY
-		#else
-		EncodeAudioStream();
-		#endif
-	}
-	popFromMessageQueue();
 	//#####################################################################################//
 	//#####################################################################################//
 	#ifdef DISPLAY
 
+	if(strcmp(MessageINTOHandler.MESSAGE, "*resetMainEngine")== 0){
+		HAL_Delay(500);
+		NVIC_SystemReset();
+	}
 	#else
 	//if(DisplayUpdate == 0){HAL_UART_DMAResume(&huart6);}
 

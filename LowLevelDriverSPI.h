@@ -12,6 +12,7 @@
 void createChecksum();
 int checkChecksum();
 void resortReceived();
+void CheckoutMessage();
 void createHeader();
 
 char UARTDATA[RX_IN_SIZE];

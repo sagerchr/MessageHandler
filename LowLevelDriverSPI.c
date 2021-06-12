@@ -6,6 +6,9 @@
  */
 #include "main.h"
 #include "MessageHandlerTask.h"
+#include "FreeRTOS.h"
+#include "queue.h"
+#include "task.h"
 
 void createHeader(){
 	UART_DMA_OUT[0] = '#';
@@ -68,6 +71,7 @@ void resortReceived(){
 #ifdef DISPLAY
 extern SPI_HandleTypeDef hspi2;
 
+
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 	resortReceived(); // If needed resort incomming Message
 	//################################<<<<CHECK THE CHECKSUM>>>>###########################//
@@ -81,6 +85,9 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 	//#####################################################################################//
 	//#####################################################################################//
 
+
+
+
 	if(UARTDATA_CHECKED[6] > maxval1){maxval1 = UARTDATA_CHECKED[6];}
 	if(UARTDATA_CHECKED[7] > maxval2){maxval2 = UARTDATA_CHECKED[7];}
 	if(UARTDATA_CHECKED[8] > maxval3){maxval3 = UARTDATA_CHECKED[8];}
@@ -91,6 +98,9 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 	if(UARTDATA_CHECKED[61] > maxval8){maxval8 = UARTDATA_CHECKED[61];}
 
 	HAL_SPI_DMAPause(&hspi2);
+	if(LastMessageConfirmed()){
+		SendConfirmed = 1;
+	}
 	createHeader();
 	createChecksum();
 	HAL_SPI_DMAResume(&hspi2);

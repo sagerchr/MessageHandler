@@ -14,9 +14,11 @@ void popFromMessageQueue();
 void getMessageToReciveStack();
 static void WriteMessage (uint32_t PopStackPointer_writing);
 float RecreateFloats(int startadress);
+void PackMessage(char *String, float payload);
+uint8_t LastMessageConfirmed();
+void ConfirmMessage();
 
-
-
+uint8_t FirstMessage;
 uint8_t SendProcess;
 
 char *OldestMessage;
