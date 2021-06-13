@@ -275,6 +275,11 @@ void PackMessage(char *String, float payload){
 	UART_DMA_OUT[172]=c;
 	UART_DMA_OUT[173]=b;
 	UART_DMA_OUT[174]=a;
+
+	#ifdef DISPLAY
+	#else
+	UART_DMA_OUT[187]=IP_READ_FLASH[14]; //color
+	#endif
 }
 
 /*

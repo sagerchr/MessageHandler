@@ -283,7 +283,7 @@ void DecodeAudioStream(){
 		AudioStreamToModel.VCALeft = VCALeft;
 		AudioStreamToModel.VCARight = VCARight;
 		AudioStreamToModel.Indicator = Indicator;
-
+		AudioStreamToModel.color = UARTDATA_CHECKED[187];
 }
 
 
