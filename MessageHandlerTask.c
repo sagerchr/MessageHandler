@@ -5,7 +5,10 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
-
+#ifdef DISPLAY
+#include "shared_params.h"
+#else
+#endif
 extern void MessageHandlerTask(void *argument);
 
 #ifdef DISPLAY
@@ -137,6 +140,15 @@ void MessageHandlerTask(void *argument)
 		HAL_Delay(500);
 		NVIC_SystemReset();
 	}
+
+	if(strcmp(MessageFROMHandler.MESSAGE, "ResetDisplay")== 0){
+		if(MessageFROMHandler.payload == 1){
+			SharedParamsWriteByIndex(0, 1);
+			NVIC_SystemReset();
+		}
+
+	}
+
 	#else
 	//if(DisplayUpdate == 0){HAL_UART_DMAResume(&huart6);}
 
