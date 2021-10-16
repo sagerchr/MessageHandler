@@ -7,6 +7,7 @@
 #include "task.h"
 #ifdef DISPLAY
 #include "shared_params.h"
+#include "MY_FLASH.h"                       /* Shared parameters header           */
 #else
 #endif
 extern void MessageHandlerTask(void *argument);
@@ -62,6 +63,14 @@ void MessageHandlerTask(void *argument)
     InitMeassageHandler();//init the MessageHandler
 
 	#ifdef DISPLAY
+
+	uint8_t ReadProgStatus[2] = {0,0};
+    MY_FLASH_ReadN(0,ReadProgStatus,2,DATA_TYPE_8);
+
+    uint8_t WriteProgStatus[2] = {0,0};
+    MY_FLASH_WriteN(0,WriteProgStatus,2,DATA_TYPE_8);
+
+
     UARTsendIntervall =0; //Intervall of UART sending
     HAL_SPI_TransmitReceive_DMA(&hspi2,(uint8_t*)UART_DMA_OUT,(uint8_t*)UART_DMA_IN, 200);
 	#else
@@ -135,6 +144,13 @@ void MessageHandlerTask(void *argument)
 	//#####################################################################################//
 	//#####################################################################################//
 	#ifdef DISPLAY
+	/////////////////GET INFO TO MODEL IF UPDATE IS IN PROGRESS/////////
+	if(ReadProgStatus[0] == 1){
+		strcpy(MessageFROMHandler.MESSAGE , "UpdateProcess");
+		xQueueSend(messageFROMHandler, &MessageFROMHandler,0);
+		ReadProgStatus[0] = 0;
+	}
+	///////////////////////////////////////////////////////////////////
 
 	if(strcmp(MessageINTOHandler.MESSAGE, "*resetMainEngine")== 0){
 		HAL_Delay(500);
